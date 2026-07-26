@@ -34,7 +34,7 @@ Options: `--avg N` (rolling window), `--replay` (print stats for already finishe
 ## How it works
 
 - `kimi.plugin.json` declares a `SessionStart` hook.
-- `hooks/on-session-start.mjs` spawns a detached terminal (`wt` on Windows, Terminal.app on macOS, `x-terminal-emulator` on Linux) running the watcher.
+- `hooks/on-session-start.mjs` opens the watcher in a **bottom split pane (25%) of the current Windows Terminal window** (`wt -w last split-pane -V --size 0.25`) and returns focus to the main pane; falls back to a plain new window when Windows Terminal is unavailable. On macOS/Linux it opens a new terminal window.
 - `watcher/tps-watch.mjs` finds the newest `~/.kimi-code/sessions/*/*/agents/main/wire.jsonl`, tails it once per second, and computes `TPS = output tokens / step duration` from `step.begin` → `usage.record` events.
 
 The watcher is read-only: it never talks to the Kimi Code process and adds zero load to it.

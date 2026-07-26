@@ -27,9 +27,15 @@ function detached(cmd, args) {
 
 try {
 	if (process.platform === "win32") {
-		// Windows Terminal в новом окне; если wt нет — conhost через start
+		// Сплит снизу (25% высоты) в последнем активном окне Windows Terminal,
+		// затем возвращаем фокус наверх. Если wt нет — обычное окно через start.
 		try {
-			detached("wt", ["-w", "new", "node", WATCHER]);
+			detached("wt", [
+				"-w", "last",
+				"split-pane", "-V", "--size", "0.25",
+				"node", WATCHER,
+				";", "move-focus", "up",
+			]);
 		} catch {
 			detached("cmd", ["/c", "start", "", "node", WATCHER]);
 		}
