@@ -1,45 +1,54 @@
 # kimi-tps-widget
 
-Live **TPS (tokens per second)** widget for [Kimi Code CLI](https://www.kimi.com/code/docs/en/).
+Живой виджет **TPS (токены в секунду)** для [Kimi Code CLI](https://www.kimi.com/code/docs/en/).
 
-Kimi Code does not expose streaming token stats to its UI or plugin API. This plugin works around it: on every session start it opens a small terminal window that tails the active session's `wire.jsonl` and renders a single live line:
+Kimi Code не отдаёт статистику стриминга ни в свой интерфейс, ни в API плагинов. Этот плагин обходит ограничение: при старте сессии он открывает в нижнем сплите Windows Terminal маленький наблюдатель, который читает `wire.jsonl` активной сессии и рисует одну живую строку:
 
 ```
  ⠹ 12s  TPS 24.3  avg 25.9  tok 191
 ```
 
-- `⠹ Ns` — a step is generating right now (spinner + timer)
-- `TPS` — tokens/sec of the last finished step (green ≥ 30, yellow 18–30, red < 18)
-- `avg` — rolling average over the last 5 steps (`--avg N` to change)
-- `tok` — output tokens of the last step
+- `⠹ Ns` — шаг генерируется прямо сейчас (спиннер + секундомер)
+- `TPS` — токены/сек последнего завершённого шага (зелёный ≥ 30, жёлтый 18–30, красный < 18)
+- `avg` — скользящее среднее за последние 5 шагов (меняется через `--avg N`)
+- `tok` — output-токены последнего шага
 
-**Known limitation:** Kimi Code writes token counts to disk only when a step finishes (verified: `content.part` and `usage.record` share the same timestamp). True per-token live TPS is impossible from outside — during generation you see the timer, the number appears the moment the step completes.
+**Известное ограничение:** Kimi Code пишет количество токенов на диск только в момент окончания шага (проверено по таймстемпам: `content.part` и `usage.record` имеют одинаковое время). Настоящий по-токенный live-TPS снаружи невозможен — во время генерации виден секундомер, цифра появляется сразу после завершения шага.
 
-## Install
+## Установка
 
 ```
-/plugins install https://github.com/<your-user>/kimi-tps-widget
+/plugins install https://github.com/gor-dey/kimi-tps-widget
 ```
 
-Then run `/reload` or start a new session. A terminal window with the widget opens automatically on every session start (only one instance — re-starts are deduplicated via a pidfile).
+Затем `/reload` или `/new`. Дальше виджет открывается сам при старте каждой сессии (дубликатов не будет — защита через pidfile).
 
-## Manual run (no plugin)
+## Ручной запуск (без плагина)
 
 ```
 node ~/.kimi-code/plugins/managed/kimi-tps-widget/watcher/tps-watch.mjs
 ```
 
-Options: `--avg N` (rolling window), `--replay` (print stats for already finished steps first).
+Опции: `--avg N` — окно скользящего среднего, `--replay` — сначала показать статистику по уже завершённым шагам.
 
-## How it works
+## Как это устроено
 
-- `kimi.plugin.json` declares a `SessionStart` hook.
-- `hooks/on-session-start.mjs` opens the watcher in a **bottom split pane (25%) of the current Windows Terminal window** (`wt -w last split-pane -H --size 0.25`) and returns focus to the main pane; falls back to a plain new window when Windows Terminal is unavailable. On macOS/Linux it opens a new terminal window.
-- `watcher/tps-watch.mjs` finds the newest `~/.kimi-code/sessions/*/*/agents/main/wire.jsonl`, tails it once per second, and computes `TPS = output tokens / step duration` from `step.begin` → `usage.record` events.
+- `kimi.plugin.json` объявляет хук на событие `SessionStart`.
+- `hooks/on-session-start.mjs` открывает watcher в **нижнем сплите (25% высоты) текущего окна Windows Terminal** (`wt -w last split-pane -H --size 0.25`) и возвращает фокус в основную панель. Если Windows Terminal недоступен — открывает обычное окно. На macOS/Linux — новое окно терминала.
+- `watcher/tps-watch.mjs` находит самый свежий `~/.kimi-code/sessions/*/*/agents/main/wire.jsonl`, дочитывает его раз в секунду и считает `TPS = output-токены / длительность шага` по событиям `step.begin` → `usage.record`.
 
-The watcher is read-only: it never talks to the Kimi Code process and adds zero load to it.
+Watcher работает только на чтение: он никак не взаимодействует с процессом Kimi Code и не нагружает его.
 
-## Uninstall
+## Обновление
+
+CLI работает с копией плагина в `plugins/managed/`, поэтому обновление = переустановка:
+
+```
+/plugins install https://github.com/gor-dey/kimi-tps-widget
+/reload
+```
+
+## Удаление
 
 ```
 /plugins remove kimi-tps-widget
