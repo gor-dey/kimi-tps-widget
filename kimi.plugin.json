@@ -1,0 +1,17 @@
+{
+	"name": "kimi-tps-widget",
+	"version": "1.0.0",
+	"description": "Live TPS (tokens per second) widget for Kimi Code: opens a terminal window that watches the active session and shows step TPS, rolling average and a timer.",
+	"keywords": ["tps", "tokens", "monitoring", "widget"],
+	"interface": {
+		"displayName": "Kimi TPS Widget",
+		"shortDescription": "Live tokens-per-second widget in a separate terminal window"
+	},
+	"hooks": [
+		{
+			"event": "SessionStart",
+			"command": "node ./hooks/on-session-start.mjs",
+			"timeout": 10
+		}
+	]
+}
