@@ -32,7 +32,7 @@ try {
 		try {
 			detached("wt", [
 				"-w", "last",
-				"split-pane", "-V", "--size", "0.25",
+				"split-pane", "-H", "--size", "0.25",
 				"node", WATCHER,
 				";", "move-focus", "up",
 			]);
