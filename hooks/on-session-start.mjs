@@ -11,6 +11,10 @@ const ROOT = process.env.KIMI_PLUGIN_ROOT || process.cwd();
 const WATCHER = path.join(ROOT, "watcher", "tps-watch.mjs");
 const PIDFILE = path.join(os.tmpdir(), "kimi-tps-widget.pid");
 
+// Уводим cwd из папки плагина: иначе запущенный виджет держит её заблокированной,
+// и переустановка плагина падает с EBUSY (Windows не даёт rmdir рабочую папку процесса)
+process.chdir(os.tmpdir());
+
 // уже запущен? (виджет пишет сюда свой pid)
 try {
 	const pid = Number(fs.readFileSync(PIDFILE, "utf8"));
